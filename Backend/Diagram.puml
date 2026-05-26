@@ -1,0 +1,149 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+
+' --- Interfaces ---
+
+interface ILLMInterface <<Interface>> {
+  + getResponse(messages: Message[]): Message
+  + setModel(model: String): void
+}
+
+interface ICache <<Interface>> {
+  + getMessages(chatID: String): Message[]
+  + getChats(userID: String): Chat[]
+  + saveHistory(message: Message): Void
+}
+
+interface IDatabase <<Interface>> {
+  + getMessages(chatID: String): Message[]
+  + getChats(userID: String): Chat[]
+  + saveHistory(message: Message): Void
+}
+
+interface ITokenVerifier <<Interface>> {
+  + verifyToken(token: String): String 
+  note right: Returns extracted userID
+}
+
+' --- Concrete Auth & Core Classes ---
+
+class GoogleAuthService {
+  + clientID: String
+  + verifyToken(token: String): String
+}
+
+class AuthMiddleware {
+  + verifier: ITokenVerifier
+  + authenticate(req: Request, res: Response, next: NextFunction): void
+}
+
+class App {
+  + app: express.app
+  + store: StorageManager
+  + auth: AuthMiddleware
+  + listen(): Void
+  - initStorage(): Void
+  - setupRoutes(): Void
+}
+
+class Controller {
+  + handleUserInput(userID: String, chatID: String, prompt: String): Message
+  + getUserChats(userID: String): Chat[]
+  + getChatMessages(chatID: String): Message[]
+}
+
+' --- Singleton Managers & DBs ---
+
+class StorageManager <<Singleton>> {
+  - {static} instance: StorageManager = new StorageManager()
+  + Database: IDatabase
+  + Cache: ICache
+  - StorageManager()
+  + {static} getInstance(): StorageManager
+  + getChats(userID: String): Chat[]
+  + getMessages(chatID: String): Message[]
+  + addMessage(message: Message): void
+}
+
+class Redis <<Singleton>> {
+  - {static} instance: Redis = new Redis()
+  + dbModel: Chat
+  + TTL: int
+  + Connection: any
+  - Redis()
+  + {static} getInstance(): Redis
+  + getMessages(chatID: String): Message[]
+  + getChats(userID: String): Chat[]
+  + saveHistory(message: Message): Void
+}
+
+class MongoDB <<Singleton>> {
+  - {static} instance: MongoDB = new MongoDB()
+  + dbModel: Chat
+  + Connection: any
+  - MongoDB()
+  + {static} getInstance(): MongoDB
+  + getMessages(chatID: String): Message[]
+  + getChats(userID: String): Chat[]
+  + saveHistory(message: Message): Void
+}
+
+' --- External Services ---
+class Gemini {
+  + API_Key: String
+  + Model: String
+  + getResponse(messages: Message[]): Message
+  + setModel(model: String): void
+}
+
+' --- Domain Models ---
+
+class Chat {
+  + Id: String
+  + userID: String
+  + Title: String
+  + LastAccessed:String
+  + messages: Message[]
+}
+
+class Message {
+  + Id: String
+  + Type: enum("User", "AI")
+  + message: String
+  + chatID: String
+}
+
+' --- Relationships ---
+
+' Interface Implementations 
+Gemini ..|> ILLMInterface
+Redis ..|> ICache
+MongoDB ..|> IDatabase
+GoogleAuthService ..|> ITokenVerifier
+
+' Auth Flow
+App --> AuthMiddleware : registers
+AuthMiddleware --> ITokenVerifier : uses
+AuthMiddleware ..> Controller : passes verified userID to
+
+' Controller Associations
+Controller --> ILLMInterface : uses
+Controller --> StorageManager : uses
+
+' App and Storage Associations
+App --> StorageManager : uses
+StorageManager --> ICache : cache layer
+StorageManager --> IDatabase : persistent layer
+
+' Composition 
+Chat *-- "0..*" Message : contains
+
+' Dependencies 
+Redis ..> Chat
+Redis ..> Message
+MongoDB ..> Chat
+MongoDB ..> Message
+
+@enduml
