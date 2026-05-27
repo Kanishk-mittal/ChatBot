@@ -17,7 +17,7 @@ export default function ChatList({ chats, activeChatId, setChat, onNewChat, isOp
     <>
       {/* Mobile Backdrop */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
           onClick={onClose}
         />
@@ -43,7 +43,7 @@ export default function ChatList({ chats, activeChatId, setChat, onNewChat, isOp
             New Chat
           </button>
 
-          <button 
+          <button
             onClick={onClose}
             className={`md:hidden p-2 rounded-lg ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'}`}
           >
@@ -59,7 +59,7 @@ export default function ChatList({ chats, activeChatId, setChat, onNewChat, isOp
               key={chat.id}
               onClick={() => setChat(chat.id)}
               className={`w-full text-left p-4 rounded-2xl transition-all duration-200 group relative overflow-hidden ${activeChatId === chat.id
-                ? 'bg-gradient-to-r from-[#FFA240] to-[#FF4646] text-white shadow-lg shadow-orange-500/20'
+                ? 'bg-linear-to-r from-[#FFA240] to-[#FF4646] text-white shadow-lg shadow-orange-500/20'
                 : theme === 'dark'
                   ? 'hover:bg-white/5 text-gray-300'
                   : 'hover:bg-white/10 text-gray-700'
