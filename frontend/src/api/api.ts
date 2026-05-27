@@ -33,7 +33,15 @@ export async function sendMessage(chatID: string, message: string, model?: strin
   });
 
 
-  return data.reply;
+  return response.json().then((data) => {
+    if (!response.ok) {
+      throw new Error(data.message || data.error || 'Failed to send message');
+    }
+    return data.reply;
+  }).catch((error) => {
+    console.error('Error sending message:', error);
+    throw error;
+  });
 }
 
 export async function getChatMessages(chatID: string): Promise<Message[]> {

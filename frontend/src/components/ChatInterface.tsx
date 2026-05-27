@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Message } from '../types/chat';
 import { useTheme } from '../context/ThemeContext';
+import { listModels } from '../api/api';
 
 interface ChatInterfaceProps {
   messages: Message[];
-  onSendMessage: (text: string) => void;
+  onSendMessage: (message: string, model?: string) => void;
   isLoading?: boolean;
   error?: string | null;
 }
@@ -12,7 +13,30 @@ interface ChatInterfaceProps {
 export default function ChatInterface({ messages, onSendMessage, isLoading = false, error = null }: ChatInterfaceProps) {
   const { theme } = useTheme();
   const [input, setInput] = useState('');
+  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [models, setModels] = useState<string[]>([]);
+  const [loadingModels, setLoadingModels] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch available models on mount
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const availableModels = await listModels();
+        setModels(availableModels);
+        // Set first model as default
+        if (availableModels.length > 0) {
+          setSelectedModel(availableModels[0]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch models:', err);
+      } finally {
+        setLoadingModels(false);
+      }
+    };
+
+    fetchModels();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -25,7 +49,7 @@ export default function ChatInterface({ messages, onSendMessage, isLoading = fal
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim() && !isLoading) {
-      onSendMessage(input.trim());
+      onSendMessage(input.trim(), selectedModel);
       setInput('');
     }
   };
@@ -78,31 +102,64 @@ export default function ChatInterface({ messages, onSendMessage, isLoading = fal
       {/* Input Area */}
       <div className="p-4 md:p-8 bg-transparent">
         <form onSubmit={handleSubmit} className="relative max-w-4xl mx-auto group">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask MAX something..."
-            className={`w-full p-4 md:p-6 pr-16 md:pr-20 backdrop-blur-2xl border transition-all shadow-2xl rounded-[2rem] placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#FFA240]/20 ${theme === 'dark'
-                ? 'bg-white/5 border-white/10 text-white'
-                : 'bg-white/90 border-white/20 text-gray-800'
+          <div className="flex gap-3 items-end">
+            {/* Model Selector */}
+            <div className="flex-shrink-0">
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                disabled={isLoading || loadingModels}
+                style={{ colorScheme: theme === 'dark' ? 'dark' : 'light' }}
+                className={`px-4 py-3 md:py-4 rounded-[1.5rem] border transition-all shadow-lg backdrop-blur-2xl focus:outline-none focus:ring-4 focus:ring-[#FFA240]/20 ${
+                  theme === 'dark'
+                    ? 'bg-gray-900 border-gray-700 text-white'
+                    : 'bg-white/90 border-white/20 text-gray-800'
+                } disabled:opacity-50 text-sm md:text-base`}
+              >
+                {loadingModels ? (
+                  <option>Loading models...</option>
+                ) : models.length === 0 ? (
+                  <option>No models available</option>
+                ) : (
+                  models.map((model) => (
+                    <option key={model} value={model}>
+                      {model.split('/').pop() || model}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+
+            {/* Input Field */}
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask MAX something..."
+              className={`flex-1 p-3 md:p-4 pr-14 md:pr-16 backdrop-blur-2xl border transition-all shadow-2xl rounded-[1.5rem] placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#FFA240]/20 ${
+                theme === 'dark'
+                  ? 'bg-white/5 border-white/10 text-white'
+                  : 'bg-white/90 border-white/20 text-gray-800'
               }`}
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="absolute right-2 top-2 bottom-2 aspect-square bg-gradient-to-br from-[#FFD41D] via-[#FFA240] to-[#FF4646] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 transition-all group-hover:shadow-orange-500/30"
-          >
-            {isLoading ? (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 md:w-6 md:h-6 animate-spin">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 12a8 8 0 018-8V0c4.418 0 8 3.582 8 8s-3.582 8-8 8v-8a8 8 0 00-8 8z" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 md:w-6 md:h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
-              </svg>
-            )}
-          </button>
+            />
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={!input.trim() || isLoading}
+              className="flex-shrink-0 px-4 py-3 md:py-4 aspect-square bg-gradient-to-br from-[#FFD41D] via-[#FFA240] to-[#FF4646] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 transition-all group-hover:shadow-orange-500/30"
+            >
+              {isLoading ? (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 md:w-6 md:h-6 animate-spin">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 12a8 8 0 018-8V0c4.418 0 8 3.582 8 8s-3.582 8-8 8v-8a8 8 0 00-8 8z" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 md:w-6 md:h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+                </svg>
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>

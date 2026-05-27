@@ -54,7 +54,7 @@ export default function Home({ user, onLogout }: HomeProps) {
     fetchMessages();
   }, [activeChatId]);
 
-  const handleSendMessage = async (text: string) => {
+  const handleSendMessage = async (text: string, model?: string) => {
     const userMessageId = Date.now().toString();
     setMessages([...messages, { id: userMessageId, type: 'User', message: text }]);
     setIsLoading(true);
@@ -62,7 +62,7 @@ export default function Home({ user, onLogout }: HomeProps) {
     try {
       if (!activeChatId) {
         // sending request to backend to create a new chat and get the first response
-        const response: NewChatResponse = await createChat(text);
+        const response: NewChatResponse = await createChat(text, model);
 
         // add the response to the messages and set the new chat as active
         setIsLoading(false);
@@ -84,7 +84,7 @@ export default function Home({ user, onLogout }: HomeProps) {
         // setting this chat as active
         setActiveChatId(response.chatID);
       } else {
-        const response: string = await sendMessage(activeChatId, text);
+        const response: string = await sendMessage(activeChatId, text, model);
         setIsLoading(false);
         const aiMessageId = Date.now().toString();
         setMessages(prev => [...prev, { id: aiMessageId, type: 'AI', message: response }]);

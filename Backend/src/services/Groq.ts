@@ -29,7 +29,27 @@ export class GroqService implements ILLMInterface {
   public async listModels(): Promise<string[]> {
     try {
       const response = await this.groq.models.list();
-      return response.data.map((model) => model.id);
+
+      // Filter down to general text/chat models
+      const chatModels = response.data
+        .map((model) => model.id)
+        .filter((id) => {
+          const lowerId = id.toLowerCase();
+
+          // 1. Exclude audio/transcription models
+          if (lowerId.includes('whisper')) return false;
+
+          // 2. Exclude security/guardrail models
+          if (lowerId.includes('guard') || lowerId.includes('safeguard')) return false;
+
+          // 3. Exclude vision-only or specialized embedding variations if any exist
+          if (lowerId.includes('vision') || lowerId.includes('embed')) return false;
+
+          // Keep everything else (Llama, Qwen, Mixtral, Gemma, etc.)
+          return true;
+        });
+
+      return chatModels;
     } catch (error) {
       console.error("Error listing available models:", error);
       return [];
@@ -105,8 +125,6 @@ export class GroqService implements ILLMInterface {
         if (!content) {
           throw new Error("No content received from Groq");
         }
-
-        console.log("Groq response received");
         return content;
       } catch (error) {
         console.error("Groq API attempt failed:", error);
