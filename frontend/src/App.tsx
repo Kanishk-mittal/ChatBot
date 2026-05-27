@@ -10,7 +10,7 @@ function AppContent() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
-  const [logoutTimer, setLogoutTimer] = useState<NodeJS.Timeout | null>(null);
+  const [logoutTimer, setLogoutTimer] = useState<number | null>(null);
 
   const handleLogout = () => {
     localStorage.removeItem('user_profile');
@@ -82,7 +82,7 @@ function AppContent() {
     return (
       <div className={`flex items-center justify-center min-h-screen transition-all duration-700 ${theme === 'dark'
         ? 'bg-black'
-        : 'bg-gradient-to-br from-[#FFCC99] via-[#FFB366] to-[#FFA240]'
+        : 'bg-linear-to-br from-[#FFCC99] via-[#FFB366] to-[#FFA240]'
         }`}>
         <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${theme === 'dark'
           ? 'border-[#FFA240]'
