@@ -1,7 +1,11 @@
 import express from 'express';
 import type { Application } from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import helmet from 'helmet';
 import { AuthMiddleware } from './middlewares/AuthMiddleware.js';
 import { GoogleAuthService } from './services/GoogleAuthService.js';
+import { getChatRoutes } from './routes/chatRoutes.js';
 
 class App {
   public app: Application;
@@ -12,7 +16,7 @@ class App {
     this.app = express();
     this.port = port;
 
-    // Initialize Auth Layer
+    // Initialize Layers
     const googleAuthService = new GoogleAuthService();
     this.auth = new AuthMiddleware(googleAuthService);
 
@@ -21,6 +25,13 @@ class App {
   }
 
   private initMiddlewares() {
+    this.app.use(helmet());
+    this.app.use(morgan('dev'));
+    this.app.use(cors({
+      origin: 'http://localhost:5173',
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization']
+    }));
     this.app.use(express.json());
   }
 
@@ -29,10 +40,8 @@ class App {
       res.send('ChatBot Backend is running');
     });
 
-    // Example of a protected route
-    this.app.get('/api/protected', this.auth.authenticate, (req, res) => {
-      res.json({ message: 'You have accessed a protected route', userId: (req as any).userId });
-    });
+    // Chat routes
+    this.app.use('/api/chat', getChatRoutes(this.auth));
   }
 
   public listen() {
