@@ -78,9 +78,9 @@ export default function ChatInterface({ messages, onSendMessage, isLoading = fal
           >
             <div
               className={`max-w-[85%] md:max-w-[70%] p-4 md:p-6 rounded-[2rem] shadow-lg ${msg.type === 'User'
-                  ? 'bg-gradient-to-br from-[#FFA240] to-[#FF4646] text-white rounded-tr-none'
-                  : `backdrop-blur-md border border-white/20 rounded-tl-none ${theme === 'dark' ? 'bg-white/10 text-gray-100' : 'bg-white text-gray-800'
-                  }`
+                ? 'bg-gradient-to-br from-[#FFA240] to-[#FF4646] text-white rounded-tr-none'
+                : `backdrop-blur-md border border-white/20 rounded-tl-none ${theme === 'dark' ? 'bg-white/10 text-gray-100' : 'bg-white text-gray-800'
+                }`
                 }`}
             >
               <div className="text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium">
@@ -110,11 +110,10 @@ export default function ChatInterface({ messages, onSendMessage, isLoading = fal
                 onChange={(e) => setSelectedModel(e.target.value)}
                 disabled={isLoading || loadingModels}
                 style={{ colorScheme: theme === 'dark' ? 'dark' : 'light' }}
-                className={`px-4 py-3 md:py-4 rounded-[1.5rem] border transition-all shadow-lg backdrop-blur-2xl focus:outline-none focus:ring-4 focus:ring-[#FFA240]/20 ${
-                  theme === 'dark'
+                className={`px-4 py-3 md:py-4 rounded-[1.5rem] border transition-all shadow-lg backdrop-blur-2xl focus:outline-none focus:ring-4 focus:ring-[#FFA240]/20 ${theme === 'dark'
                     ? 'bg-gray-900 border-gray-700 text-white'
                     : 'bg-white/90 border-white/20 text-gray-800'
-                } disabled:opacity-50 text-sm md:text-base`}
+                  } disabled:opacity-50 text-sm md:text-base`}
               >
                 {loadingModels ? (
                   <option>Loading models...</option>
@@ -136,11 +135,10 @@ export default function ChatInterface({ messages, onSendMessage, isLoading = fal
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask MAX something..."
-              className={`flex-1 p-3 md:p-4 pr-14 md:pr-16 backdrop-blur-2xl border transition-all shadow-2xl rounded-[1.5rem] placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#FFA240]/20 ${
-                theme === 'dark'
+              className={`flex-1 p-3 md:p-4 pr-14 md:pr-16 backdrop-blur-2xl border transition-all shadow-2xl rounded-[1.5rem] placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#FFA240]/20 ${theme === 'dark'
                   ? 'bg-white/5 border-white/10 text-white'
                   : 'bg-white/90 border-white/20 text-gray-800'
-              }`}
+                }`}
             />
 
             {/* Submit Button */}
