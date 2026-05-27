@@ -34,12 +34,18 @@ export class StorageManager {
   async getMessages(chatID: string): Promise<Message[]> {
     // Try cache first
     let messages = await this.cache.getMessages(chatID);
-    
+
     if (messages.length === 0) {
       // If not in cache, fetch from database
+      console.log(`[STORAGE] Cache MISS for chat ${chatID}. Fetching from DATABASE...`);
       messages = await this.database.getMessages(chatID);
+      console.log(`[STORAGE] Retrieved ${messages.length} messages from DATABASE for chat ${chatID}`);
+      await this.cache.saveChat(chatID, messages); // Save to cache for future requests
+      console.log(`[STORAGE] Saved ${messages.length} messages to CACHE for chat ${chatID}`);
+    } else {
+      console.log(`[STORAGE] Cache HIT for chat ${chatID}. Retrieved ${messages.length} messages from CACHE`);
     }
-    
+
     return messages;
   }
 
@@ -49,17 +55,23 @@ export class StorageManager {
    */
   async addMessage(chatID: string, message: Message): Promise<void> {
     // 1. Save to persistent database
+    console.log(`[STORAGE] Saving message to DATABASE for chat ${chatID}`);
     await this.database.saveHistory(chatID, message);
+    console.log(`[STORAGE] Message saved to DATABASE for chat ${chatID}`);
 
     // 2. Update cache
     try {
       // Try to update existing cache entry
-      await this.cache.saveHistory(chatID, message);
+      console.log(`[STORAGE] Adding message to CACHE for chat ${chatID}`);
+      await this.cache.addMessage(chatID, message);
+      console.log(`[STORAGE] Message added to CACHE for chat ${chatID}`);
     } catch (error) {
       // If cache update fails (chat not in cache), fetch full chat from DB and save to cache
+      console.log(`[STORAGE] Cache update failed for chat ${chatID}. Fetching full chat from DATABASE...`);
       const chat = await this.database.getChat(chatID);
       if (chat) {
-        await this.cache.saveChat(chat);
+        await this.cache.saveChat(chat.id, chat.messages);
+        console.log(`[STORAGE] Synced ${chat.messages.length} messages to CACHE for chat ${chatID}`);
       }
     }
   }
