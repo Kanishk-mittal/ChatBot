@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 export enum MessageType {
   USER = "User",
   AI = "AI",
@@ -7,19 +9,16 @@ export const schema = {
   id: { type: 'string', required: true },
   type: { type: 'string', enum: [MessageType.USER, MessageType.AI], required: true },
   message: { type: 'string', required: true },
-  chatId: { type: 'string', required: true },
 };
 
 export class Message {
   public id: string;
   public type: MessageType;
   public message: string;
-  public chatId: string;
 
-  constructor(id: string, type: MessageType, message: string, chatId: string) {
-    this.id = id;
-    this.type = type;
+  constructor(message: string, type: MessageType) {
+    this.id = uuidv4();
     this.message = message;
-    this.chatId = chatId;
+    this.type = type;
   }
 }

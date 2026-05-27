@@ -14,13 +14,25 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "google-auth-library": "^10.6.2"
+    "google-auth-library": "^10.6.2",
+    "groq-sdk": "^1.2.0",
+    "helmet": "^8.2.0",
+    "mongoose": "^9.6.2",
+    "morgan": "^1.10.1",
+    "redis": "^5.12.1",
+    "redis-om": "^0.4.7",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
     "@types/node": "^25.9.1",
+    "@types/uuid": "^10.0.0",
     "nodemon": "^3.1.14",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"

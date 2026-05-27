@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { Message, schema as messageSchema } from "./Message.js";
 
 export const schema = {
@@ -15,19 +16,11 @@ export class Chat {
   public lastAccessed: string;
   public messages: Message[];
 
-  constructor(
-    id: string,
-    userId: string,
-    title: string,
-    lastAccessed: string,
-    messages: Message[] = []
-  ) {
-    this.id = id;
+  constructor(userId: string, title: string, initialMessage?: Message) {
+    this.id = uuidv4();
     this.userId = userId;
     this.title = title;
-    this.lastAccessed = lastAccessed;
-    this.messages = messages;
+    this.lastAccessed = new Date().toISOString();
+    this.messages = initialMessage ? [initialMessage] : [];
   }
 }
-
-
