@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
@@ -6,33 +7,19 @@ import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../context/ThemeContext';
 
 interface LoginProps {
-  onLogin: (user: UserProfile) => void;
+  onLogin: (user: UserProfile, token: string) => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <div className={`flex flex-col items-center justify-center min-h-screen p-4 font-sans transition-all duration-700 relative overflow-hidden ${theme === 'dark'
-        ? 'bg-black'
-        : 'bg-gradient-to-br from-[#FFCC99] via-[#FFB366] to-[#FFA240]'
+      ? 'bg-black'
+      : 'bg-gradient-to-br from-[#FFCC99] via-[#FFB366] to-[#FFA240]'
       }`}>
-      {/* Light Mode Decorative Bubbles */}
-      {theme === 'light' && (
-        <>
-          <div className="absolute top-[-5%] right-[-5%] w-64 h-64 bg-[#FFD41D]/40 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-[-5%] left-[-5%] w-64 h-64 bg-white/30 rounded-full blur-3xl"></div>
-        </>
-      )}
-
-      {/* Dynamic Background Glows for Dark Mode */}
-      {theme === 'dark' && (
-        <>
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#FFD41D]/10 rounded-full blur-[120px] pointer-events-none opacity-100 transition-opacity duration-1000"></div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#FF4646]/10 rounded-full blur-[120px] pointer-events-none opacity-100 transition-opacity duration-1000"></div>
-        </>
-      )}
 
       {/* Theme Toggle Positioned Top Right */}
       <div className="absolute top-6 right-6 z-20">
@@ -69,8 +56,8 @@ export default function Login({ onLogin }: LoginProps) {
 
         {/* Login Card */}
         <div className={`backdrop-blur-xl border-2 rounded-[2.5rem] p-10 shadow-2xl transition-all duration-500 ${theme === 'dark'
-            ? 'bg-white/5 border-white/10 shadow-none'
-            : 'bg-white/90 border-white shadow-[#FF4646]/20'
+          ? 'bg-white/5 border-white/10 shadow-none'
+          : 'bg-white/90 border-white shadow-[#FF4646]/20'
           }`}>
           <h2 className={`text-2xl font-bold mb-8 text-center ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
             }`}>
@@ -82,20 +69,38 @@ export default function Login({ onLogin }: LoginProps) {
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   if (credentialResponse.credential) {
-                    const decoded = jwtDecode<UserProfile>(credentialResponse.credential);
-                    localStorage.setItem('jwt_token', credentialResponse.credential);
-                    localStorage.setItem('user_profile', JSON.stringify(decoded));
-                    onLogin(decoded);
-                    navigate('/');
+                    try {
+                      const decoded = jwtDecode<UserProfile>(credentialResponse.credential);
+                      onLogin(decoded, credentialResponse.credential);
+                      navigate('/');
+                    } catch (err) {
+                      console.error('Login error:', err);
+                      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
+                      setError(errorMessage);
+                    }
+                  } else {
+                    setError('No credential received from Google. Please try again.');
                   }
                 }}
-                onError={() => console.error('Login Failed')}
+                onError={() => {
+                  console.error('Google Login Error');
+                  setError('Google login failed. Please try again.');
+                }}
                 theme={theme === 'dark' ? 'filled_black' : 'outline'}
                 shape="pill"
                 size="large"
                 width="100%"
               />
             </div>
+
+            {error && (
+              <div className={`p-4 rounded-xl text-sm font-medium text-center backdrop-blur-sm border-2 ${theme === 'dark'
+                ? 'bg-red-500/20 border-red-500/50 text-red-300'
+                : 'bg-red-500/20 border-red-500/50 text-red-600'
+                }`}>
+                {error}
+              </div>
+            )}
 
             <div className="relative my-2">
               <div className="absolute inset-0 flex items-center">
@@ -111,11 +116,11 @@ export default function Login({ onLogin }: LoginProps) {
             <p className={`text-[10px] leading-relaxed text-center px-2 uppercase tracking-tight ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'
               }`}>
               By entering, you accept our <a href="#" className={`transition-colors font-bold ${theme === 'dark'
+                ? 'text-[#FFA240] hover:text-[#FFD41D]'
+                : 'text-[#D73535] hover:text-[#FF4646]'
+                }`}>Terms of Service</a> & <a href="#" className={`transition-colors font-bold ${theme === 'dark'
                   ? 'text-[#FFA240] hover:text-[#FFD41D]'
                   : 'text-[#D73535] hover:text-[#FF4646]'
-                }`}>Terms of Service</a> & <a href="#" className={`transition-colors font-bold ${theme === 'dark'
-                    ? 'text-[#FFA240] hover:text-[#FFD41D]'
-                    : 'text-[#D73535] hover:text-[#FF4646]'
                   }`}>Privacy Protocol</a>.
             </p>
           </div>
