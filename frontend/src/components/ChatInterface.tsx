@@ -100,44 +100,45 @@ export default function ChatInterface({ messages, onSendMessage, isLoading = fal
       </div>
 
       {/* Input Area */}
-      <div className="p-4 md:p-8 bg-transparent">
-        <form onSubmit={handleSubmit} className="relative max-w-4xl mx-auto group">
-          <div className="flex gap-3 items-end">
-            {/* Model Selector */}
-            <div className="flex-shrink-0">
-              <select
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
-                disabled={isLoading || loadingModels}
-                style={{ colorScheme: theme === 'dark' ? 'dark' : 'light' }}
-                className={`px-4 py-3 md:py-4 rounded-[1.5rem] border transition-all shadow-lg backdrop-blur-2xl focus:outline-none focus:ring-4 focus:ring-[#FFA240]/20 ${theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 text-white'
-                    : 'bg-white/90 border-white/20 text-gray-800'
-                  } disabled:opacity-50 text-sm md:text-base`}
-              >
-                {loadingModels ? (
-                  <option>Loading models...</option>
-                ) : models.length === 0 ? (
-                  <option>No models available</option>
-                ) : (
-                  models.map((model) => (
-                    <option key={model} value={model}>
-                      {model.split('/').pop() || model}
-                    </option>
-                  ))
-                )}
-              </select>
-            </div>
+      <div className="p-2 md:p-8 bg-transparent">
+        <form onSubmit={handleSubmit} className="relative max-w-4xl mx-auto group flex flex-col md:flex-row gap-2 md:gap-3 items-stretch md:items-end">
+          {/* Model Selector */}
+          <div className="flex-shrink-0 w-full md:w-auto">
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              disabled={isLoading || loadingModels}
+              style={{ colorScheme: theme === 'dark' ? 'dark' : 'light' }}
+              className={`w-full px-4 py-3 md:py-4 rounded-[1.5rem] border transition-all shadow-lg backdrop-blur-2xl focus:outline-none focus:ring-4 focus:ring-[#FFA240]/20 ${theme === 'dark'
+                ? 'bg-gray-900 border-gray-700 text-white'
+                : 'bg-white/90 border-white/20 text-gray-800'
+                } disabled:opacity-50 text-sm md:text-base`}
+            >
+              {loadingModels ? (
+                <option>Loading models...</option>
+              ) : models.length === 0 ? (
+                <option>No models available</option>
+              ) : (
+                models.map((model) => (
+                  <option key={model} value={model}>
+                    {model.split('/').pop() || model}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
 
+          {/* Input + Button Row */}
+          <div className="flex gap-2 md:gap-3 items-end flex-1">
             {/* Input Field */}
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask MAX something..."
-              className={`flex-1 p-3 md:p-4 pr-14 md:pr-16 backdrop-blur-2xl border transition-all shadow-2xl rounded-[1.5rem] placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#FFA240]/20 ${theme === 'dark'
-                  ? 'bg-white/5 border-white/10 text-white'
-                  : 'bg-white/90 border-white/20 text-gray-800'
+              placeholder="Ask MAX..."
+              className={`flex-1 min-w-0 p-3 md:p-4 backdrop-blur-2xl border transition-all shadow-2xl rounded-[1.5rem] placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#FFA240]/20 text-sm md:text-base ${theme === 'dark'
+                ? 'bg-white/5 border-white/10 text-white'
+                : 'bg-white/90 border-white/20 text-gray-800'
                 }`}
             />
 
@@ -145,7 +146,7 @@ export default function ChatInterface({ messages, onSendMessage, isLoading = fal
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className="flex-shrink-0 px-4 py-3 md:py-4 aspect-square bg-gradient-to-br from-[#FFD41D] via-[#FFA240] to-[#FF4646] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 transition-all group-hover:shadow-orange-500/30"
+              className="flex-shrink-0 p-3 md:px-4 md:py-4 md:aspect-square bg-gradient-to-br from-[#FFD41D] via-[#FFA240] to-[#FF4646] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 transition-all group-hover:shadow-orange-500/30"
             >
               {isLoading ? (
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 md:w-6 md:h-6 animate-spin">
