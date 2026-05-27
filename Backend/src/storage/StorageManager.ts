@@ -7,8 +7,8 @@ import type { Chat } from '../models/Chat.js';
 
 export class StorageManager {
   private static instance: StorageManager = new StorageManager();
-  public database: IDatabase;
-  public cache: ICache;
+  private database: IDatabase;
+  private cache: ICache;
 
   private constructor() {
     this.database = MongoDB.getInstance();
@@ -50,6 +50,28 @@ export class StorageManager {
   }
 
   /**
+   * Fetches a specific chat by ID.
+   * Always fetches from database to get complete chat object.
+   */
+  async getChat(chatID: string): Promise<Chat | null> {
+    try {
+      console.log(`[STORAGE] Fetching chat ${chatID} from DATABASE`);
+      const chat = await this.database.getChat(chatID);
+      
+      if (!chat) {
+        console.log(`[STORAGE] Chat ${chatID} not found in DATABASE`);
+        return null;
+      }
+
+      console.log(`[STORAGE] Retrieved chat ${chatID} from DATABASE`);
+      return chat;
+    } catch (error) {
+      console.error(`[STORAGE] Error fetching chat ${chatID}:`, error);
+      return null;
+    }
+  }
+
+  /**
    * Adds a new message to a chat.
    * Saves to database first, then updates/initializes cache.
    */
@@ -75,4 +97,26 @@ export class StorageManager {
       }
     }
   }
+
+  /**
+   * Creates and saves a new chat.
+   * Saves to database first, then initializes cache.
+   */
+  async saveNewChat(chat: Chat): Promise<void> {
+    // 1. Save to persistent database
+    console.log(`[STORAGE] Creating new chat ${chat.id} in DATABASE`);
+    await this.database.saveChat(chat);
+    console.log(`[STORAGE] New chat ${chat.id} saved to DATABASE`);
+
+    // 2. Initialize cache with empty messages
+    try {
+      console.log(`[STORAGE] Initializing CACHE for new chat ${chat.id}`);
+      await this.cache.saveChat(chat.id, chat.messages || []);
+      console.log(`[STORAGE] New chat ${chat.id} initialized in CACHE`);
+    } catch (error) {
+      console.error(`[STORAGE] Error initializing cache for chat ${chat.id}:`, error);
+      // Don't throw - allow graceful degradation
+    }
+  }
+  
 }
