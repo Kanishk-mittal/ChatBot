@@ -6,20 +6,24 @@ skinparam shadowing false
 ' --- Interfaces ---
 
 interface ILLMInterface <<Interface>> {
-  + getResponse(messages: Message[]): Message
+  + getResponse(messages: Message[]): Promise<String>
+  + generateTitle(firstMessage: String): Promise<String>
+  + listModels(): Promise<String[]>
   + setModel(model: String): void
 }
 
 interface ICache <<Interface>> {
-  + getMessages(chatID: String): Message[]
-  + getChats(userID: String): Chat[]
-  + saveHistory(message: Message): Void
+  + getMessages(chatID: String): Promise<Message[]>
+  + saveHistory(chatID: String, message: Message): Promise<Void>
+  + saveChat(chat: Chat): Promise<Void>
 }
 
 interface IDatabase <<Interface>> {
-  + getMessages(chatID: String): Message[]
-  + getChats(userID: String): Chat[]
-  + saveHistory(message: Message): Void
+  + getMessages(chatID: String): Promise<Message[]>
+  + getChats(userID: String): Promise<Chat[]>
+  + getChat(chatID: String): Promise<Chat>
+  + saveChat(chat: Chat): Promise<Void>
+  + saveHistory(chatID: String, message: Message): Promise<Void>
 }
 
 interface ITokenVerifier <<Interface>> {
@@ -48,10 +52,12 @@ class App {
   - setupRoutes(): Void
 }
 
-class Controller {
-  + handleUserInput(userID: String, chatID: String, prompt: String): Message
-  + getUserChats(userID: String): Chat[]
-  + getChatMessages(chatID: String): Message[]
+class ChatController {
+  + createChat(req: Request, res: Response): Void
+  + sendMessage(req: Request, res: Response): Void
+  + listChats(req: Request, res: Response): Void
+  + listModels(req: Request, res: Response): Void
+  + getChatMessages(req: Request, res: Response): Void
 }
 
 class SchemaFactory {
@@ -69,7 +75,7 @@ class StorageManager <<Singleton>> {
   + {static} getInstance(): StorageManager
   + getChats(userID: String): Chat[]
   + getMessages(chatID: String): Message[]
-  + addMessage(message: Message): void
+  + addMessage(chatID: String, message: Message): void
 }
 
 class Redis <<Singleton>> {
@@ -80,8 +86,8 @@ class Redis <<Singleton>> {
   - Redis()
   + {static} getInstance(): Redis
   + getMessages(chatID: String): Message[]
-  + getChats(userID: String): Chat[]
-  + saveHistory(message: Message): Void
+  + saveHistory(chatID: String, message: Message): Void
+  + saveChat(chat: Chat): Void
 }
 
 class MongoDB <<Singleton>> {
@@ -92,14 +98,15 @@ class MongoDB <<Singleton>> {
   + {static} getInstance(): MongoDB
   + getMessages(chatID: String): Message[]
   + getChats(userID: String): Chat[]
-  + saveHistory(message: Message): Void
+  + getChat(chatID: String): Chat
+  + saveHistory(chatID: String, message: Message): Void
 }
 
 ' --- External Services ---
-class Gemini {
+class GroqService {
   + API_Key: String
   + Model: String
-  + getResponse(messages: Message[]): Message
+  + getResponse(messages: Message[]): String
   + setModel(model: String): void
 }
 
@@ -118,14 +125,13 @@ class Message {
   + Id: String
   + Type: enum("User", "AI")
   + message: String
-  + chatID: String
   + {static} schema: Object
 }
 
 ' --- Relationships ---
 
 ' Interface Implementations 
-Gemini ..|> ILLMInterface
+GroqService ..|> ILLMInterface
 Redis ..|> ICache
 MongoDB ..|> IDatabase
 GoogleAuthService ..|> ITokenVerifier
@@ -133,11 +139,11 @@ GoogleAuthService ..|> ITokenVerifier
 ' Auth Flow
 App --> AuthMiddleware : registers
 AuthMiddleware --> ITokenVerifier : uses
-AuthMiddleware ..> Controller : passes verified userID to
+AuthMiddleware ..> ChatController : passes verified userID to
 
 ' Controller Associations
-Controller --> ILLMInterface : uses
-Controller --> StorageManager : uses
+ChatController --> ILLMInterface : uses
+ChatController --> StorageManager : uses
 
 ' App and Storage Associations
 App --> StorageManager : uses
